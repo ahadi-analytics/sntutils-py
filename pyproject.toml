@@ -1,0 +1,109 @@
+[project]
+name = "sntutils"
+version = "0.1.1"
+description = "Utility Functions for Data Preparation and Analysis in Subnational Tailoring of Malaria Interventions (SNT)"
+requires-python = ">= 3.9"
+authors = [
+    {name = "Mohamed A. Yusuf", email = "mohamedayusuf87@gmail.com"},
+]
+license = {text = "CC BY 4.0"}
+readme = "README.md"
+keywords = ["malaria", "health", "geospatial", "climate", "data-analysis"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: GIS",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
+dependencies = [
+    "requests>=2.31.0",
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "geopandas>=0.14.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=4.9.0",
+    "tqdm>=4.65.0",
+    "click>=8.1.0",
+    "pathlib>=1.0.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "flake8>=6.0.0",
+    "mypy>=1.5.0",
+    "pre-commit>=3.4.0",
+]
+docs = [
+    "sphinx>=7.1.0",
+    "sphinx-rtd-theme>=1.3.0",
+    "myst-parser>=2.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ahadi-analytics/sntutils-py"
+Repository = "https://github.com/ahadi-analytics/sntutils-py"
+Documentation = "https://github.com/ahadi-analytics/sntutils-py"
+"Bug Tracker" = "https://github.com/ahadi-analytics/sntutils-py/issues"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+    \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+    "coverage-badge>=1.1.2",
+    "flake8>=7.3.0",
+    "mypy>=1.17.1",
+    "pandas-stubs>=2.2.2.240807",
+    "pre-commit>=4.3.0",
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "types-requests>=2.32.4.20250809",
+    "types-tqdm>=4.67.0.20250809",
+]
