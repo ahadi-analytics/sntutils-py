@@ -1,9 +1,5 @@
-"""Climate data utilities for sntutils-py."""
+"""Climate data utilities for sntutils."""
 
-from .download_chirps import (
-    chirps_options,
-    check_chirps_available,
-    download_chirps,
-)
+from .download_chirps import chirps_options, check_chirps_available, download_chirps
 
 __all__ = ["chirps_options", "check_chirps_available", "download_chirps"]

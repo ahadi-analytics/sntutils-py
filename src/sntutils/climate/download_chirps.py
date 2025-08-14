@@ -7,15 +7,77 @@ Climate Hazards Group archive.
 """
 
 import gzip
+import logging
 import re
+import time
+from functools import wraps
 from pathlib import Path
-from typing import Optional
+from typing import Any, Callable, Optional
 from urllib.parse import urljoin
 
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
+
+from ..config import config
+
+logger = logging.getLogger(__name__)
+
+
+def retry(times: int = 3, delay: float = 1.0, backoff: float = 2.0) -> Callable:
+    """
+    Retry decorator for handling transient network failures.
+
+    Args:
+        times: Maximum number of retry attempts
+        delay: Initial delay between retries in seconds
+        backoff: Backoff multiplier for delay
+    """
+
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
+            attempt = 1
+            current_delay = delay
+
+            while attempt <= times:
+                try:
+                    return func(*args, **kwargs)
+                except requests.RequestException as e:
+                    if attempt == times:
+                        logger.error(f"Failed after {times} attempts: {e}")
+                        raise
+
+                    logger.warning(
+                        f"Attempt {attempt} failed: {e}. Retrying in {current_delay}s..."
+                    )
+                    time.sleep(current_delay)
+                    current_delay *= backoff
+                    attempt += 1
+
+        return wrapper
+
+    return decorator
+
+
+@retry(times=3, delay=1.0, backoff=2.0)
+def _download_file_with_retry(url: str, dest_path: Path, filename: str) -> None:
+    """
+    Download a file with retry logic.
+
+    Args:
+        url: URL to download from
+        dest_path: Local path to save to
+        filename: Filename for progress display
+    """
+    response = requests.get(url, timeout=config.get_timeout(), stream=True)
+    response.raise_for_status()
+
+    with open(dest_path, "wb") as f:
+        for chunk in response.iter_content(chunk_size=config.get_chunk_size()):
+            if chunk:
+                f.write(chunk)
 
 
 def chirps_options() -> pd.DataFrame:
@@ -91,9 +153,7 @@ def check_chirps_available(
         >>> if files is not None:
         ...     print(f"Available files: {len(files)}")
     """
-    base_url = (
-        f"https://data.chc.ucsb.edu/products/CHIRPS-2.0/{dataset_code}/tifs/"
-    )
+    base_url = f"https://data.chc.ucsb.edu/products/CHIRPS-2.0/{dataset_code}/tifs/"
 
     try:
         response = requests.get(base_url, timeout=30)
@@ -105,7 +165,7 @@ def check_chirps_available(
         files = [f for f in files if f.endswith(".tif.gz")]
 
         if not files:
-            print(f"No valid CHIRPS files found for {dataset_code}.")
+            logger.info(f"No valid CHIRPS files found for {dataset_code}.")
             return None
 
         data = []
@@ -129,7 +189,7 @@ def check_chirps_available(
                 )
 
         if not data:
-            print(f"No valid CHIRPS files found for {dataset_code}.")
+            logger.info(f"No valid CHIRPS files found for {dataset_code}.")
             return None
 
         df = pd.DataFrame(data)
@@ -143,14 +203,14 @@ def check_chirps_available(
             if len(dates) > 0:
                 start_date = dates.min().strftime("%b %Y")
                 end_date = dates.max().strftime("%b %Y")
-                print(
+                logger.info(
                     f"✓ {dataset_code}: Data available from {start_date} to "
                     f"{end_date}."
                 )
         except Exception:
             years = df["year"].dropna()
             if len(years) > 0:
-                print(
+                logger.info(
                     f"✓ {dataset_code}: Data available {years.min()} - "
                     f"{years.max()}."
                 )
@@ -166,7 +226,7 @@ def download_chirps(
     dataset: str,
     start: str,
     end: Optional[str] = None,
-    out_dir: str = ".",
+    out_dir: Optional[str] = None,
     unzip: bool = True,
 ) -> None:
     """
@@ -224,11 +284,14 @@ def download_chirps(
     except Exception as e:
         raise ValueError(f"Invalid date format. Use YYYY-MM format: {e}")
 
-    # Create output directory
-    out_path = Path(out_dir)
+    # Set output directory
+    if out_dir is None:
+        out_path = config.get_download_dir()
+    else:
+        out_path = Path(out_dir)
     out_path.mkdir(parents=True, exist_ok=True)
 
-    print(f"\n=== Downloading CHIRPS: {sel['label']} ===")
+    logger.info(f"=== Downloading CHIRPS: {sel['label']} ===")
 
     # Download files with progress bar
     for date in tqdm(dates, desc="Downloading"):
@@ -272,4 +335,4 @@ def download_chirps(
             except Exception as e:
                 tqdm.write(f"✗ Failed {custom_name}: {e}")
 
-    print("\n✓ All CHIRPS files processed")
+    logger.info("✓ All CHIRPS files processed")

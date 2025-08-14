@@ -1,0 +1,17 @@
+# Example sntutils configuration file
+# Save as ~/.sntutils/config.yaml or .sntutils.yaml in project root
+
+# Default directory for CHIRPS downloads
+default_download_dir: "~/data/chirps"
+
+# HTTP request settings
+chunk_size: 8192        # Download chunk size in bytes
+timeout: 60             # Request timeout in seconds
+
+# Retry settings for failed downloads
+retry_times: 3          # Number of retry attempts
+retry_delay: 1.0        # Initial delay between retries (seconds)
+retry_backoff: 2.0      # Exponential backoff multiplier
+
+# Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+log_level: "INFO"
