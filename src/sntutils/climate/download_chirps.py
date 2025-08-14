@@ -50,7 +50,7 @@ def retry(times: int = 3, delay: float = 1.0, backoff: float = 2.0) -> Callable:
                         raise
 
                     logger.warning(
-                        f"Attempt {attempt} failed: {e}. Retrying in {current_delay}s..."
+                        f"Attempt {attempt} failed: {e}. Retry in {current_delay}s..."
                     )
                     time.sleep(current_delay)
                     current_delay *= backoff
