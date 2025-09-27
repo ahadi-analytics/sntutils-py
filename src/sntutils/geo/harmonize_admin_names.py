@@ -1082,8 +1082,6 @@ def prep_geonames(
     level4: Optional[str] = None,
     cache_path: Optional[str] = None,
     unmatched_export_path: Optional[str] = None,
-    output_path: Optional[str] = None,
-    output_format: Optional[str] = None,
     method: str = "jw",
     interactive: bool = True,
     max_options: int = 200,
@@ -1117,11 +1115,6 @@ def prep_geonames(
         Path where the cache data frame is saved after user modifications.
     unmatched_export_path : str, optional
         Path to save unmatched data after processing.
-    output_path : str, optional
-        Path to save the cleaned data. Format inferred from extension or output_format.
-    output_format : str, optional
-        Output format for the cleaned data. Options: 'csv', 'xlsx', 'rds', 'parquet',
-        'pickle', 'json', 'feather'. If None, inferred from output_path extension.
     method : str, default "jw"
         String distance calculation method to be used.
     interactive : bool, default True
@@ -1298,15 +1291,6 @@ def prep_geonames(
         finalised_df = orig_df
         if preserve_case:
             finalised_df = apply_case_mapping(finalised_df, lookup_case_mapping, levels)
-
-        # Export the cleaned data if output_path is specified
-        if output_path:
-            export_success = export_dataframe(finalised_df, output_path, output_format)
-            if not export_success and interactive:
-                user_input = input("Export failed. Do you want to continue anyway? [y/n]: ").lower()
-                if user_input != 'y':
-                    print("Exiting due to export failure.")
-                    return None
 
         return finalised_df
 
@@ -1547,15 +1531,6 @@ def prep_geonames(
     # Apply case mapping if preserve_case is True
     if preserve_case:
         finalised_df = apply_case_mapping(finalised_df, lookup_case_mapping, levels)
-
-    # Export the cleaned data if output_path is specified
-    if output_path:
-        export_success = export_dataframe(finalised_df, output_path, output_format)
-        if not export_success and interactive:
-            user_input = input("Export failed. Do you want to continue anyway? [y/n]: ").lower()
-            if user_input != 'y':
-                print("Exiting due to export failure.")
-                return None
 
     return finalised_df
 
