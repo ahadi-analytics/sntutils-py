@@ -78,6 +78,7 @@ pip install -e ".[dev]"
 
 ```python
 from sntutils.climate import download_chirps, chirps_options, check_chirps_available
+from sntutils.geo import prep_geonames
 ```
 
 ## Download Climate Data (CHIRPS Rainfall)
@@ -140,6 +141,70 @@ This will download the following files to the `data/chirps/` folder (and unzip t
 - `africa_monthly_chirps-v2.0.2022.02.tif`
 - `africa_monthly_chirps-v2.0.2022.03.tif`
 
+## Harmonize Administrative Names
+
+The `prep_geonames()` function harmonizes administrative names in datasets to match standard geonames, supporting hierarchical matching from country down to district levels. It uses string distance algorithms and interactive menus for manual corrections when needed.
+
+```python
+from sntutils.geo import prep_geonames
+import pandas as pd
+
+# Load your data with administrative names
+data = pd.DataFrame({
+    'country': ['Kenya', 'Uganda', 'Tanzania'],
+    'region': ['Nairobi', 'Kampala', 'Dar es Salaam'],
+    'district': ['Westlands', 'Central', 'Kinondoni']
+})
+
+# Harmonize names against standard geonames
+# Load lookup data
+lookup_df = pd.read_csv("geonames.csv")
+
+harmonized_data = prep_geonames(
+    target_df=data,            # Your data to harmonize
+    lookup_df=lookup_df,       # Reference geonames dataframe
+    level0='country',          # Country column in both dataframes
+    level1='region',           # Region column in both dataframes
+    level2='district',         # District column in both dataframes
+    method="jw",               # Jaro-Winkler distance (or "lv" for Levenshtein)
+    cache_path="cache.xlsx",   # Cache manual corrections (format auto-detected from extension)
+    preserve_case=True         # Preserve original case in output
+)
+
+# The function returns the harmonized dataframe directly
+print(harmonized_data[['country', 'region', 'district']])
+```
+
+### Features
+
+- **Hierarchical matching**: Matches names at multiple administrative levels (country → province → district)
+- **String distance algorithms**: Supports Jaro-Winkler (`method="jw"`) and Levenshtein (`method="lv"`) distance metrics
+- **Interactive correction**: Presents menu options for manual name corrections when fuzzy matching fails
+- **Caching**: Saves manual corrections to avoid repeat work across sessions
+- **Batch processing**: Efficiently processes large datasets with progress tracking
+- **Match statistics**: Displays detailed statistics about successful matches at each level
+- **Case preservation**: Option to maintain original case in output while matching case-insensitively
+
+### Cache Management
+
+The function maintains a cache of manual corrections to streamline repeat harmonization:
+
+```python
+# Load and inspect cache
+from sntutils.geo import load_cache, save_cache
+
+cache = load_cache("cache.xlsx", format="excel")
+print(cache.head())
+
+# Cache columns include:
+# - level: Administrative level (level0, level1, etc.)
+# - name_to_match: Original name from your data
+# - replacement: Corrected/harmonized name
+# - level0_prepped through level4_prepped: Hierarchical structure
+# - created_time: When the correction was made
+# - name_of_creator: User who made the correction
+```
+
 ## Examples
 
 See the `examples/` directory for complete usage examples:
@@ -176,6 +241,7 @@ uv run mypy src
 sntutils-py/
 ├── src/sntutils/              # Main package
 │   ├── climate/               # Climate data utilities
+│   ├── geo/                   # Geographic harmonization utilities
 │   └── utils/                 # General utilities
 ├── tests/                     # Test suite
 ├── examples/                  # Usage examples
