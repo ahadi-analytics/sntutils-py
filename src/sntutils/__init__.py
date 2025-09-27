@@ -5,5 +5,6 @@ __author__ = "Mohamed A. Yusuf"
 __email__ = "mohamedayusuf87@gmail.com"
 
 from . import config
+from . import geo
 
-__all__ = ["config"]
+__all__ = ["config", "geo"]

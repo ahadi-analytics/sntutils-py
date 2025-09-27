@@ -32,6 +32,8 @@ dependencies = [
     "tqdm>=4.65.0",
     "click>=8.1.0",
     "pathlib>=1.0.1",
+    "python-Levenshtein>=0.21.0",
+    "rich>=13.7.0",
 ]
 
 [project.optional-dependencies]
