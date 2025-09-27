@@ -2384,6 +2384,7 @@ dev = [
     { name = "pre-commit" },
     { name = "pytest" },
     { name = "pytest-cov" },
+    { name = "types-openpyxl" },
     { name = "types-pyyaml" },
     { name = "types-requests" },
     { name = "types-tqdm" },
@@ -2440,6 +2441,7 @@ dev = [
     { name = "pre-commit", specifier = ">=4.3.0" },
     { name = "pytest", specifier = ">=8.4.1" },
     { name = "pytest-cov", specifier = ">=6.2.1" },
+    { name = "types-openpyxl", specifier = ">=3.1.5.20250919" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20250809" },
     { name = "types-requests", specifier = ">=2.32.4.20250809" },
     { name = "types-tqdm", specifier = ">=4.67.0.20250809" },
@@ -2688,6 +2690,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a8/4b/29b4ef32e036bb34e4ab51796dd745cdba7ed47ad142a9f4a1eb8e0c744d/tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2", size = 169737, upload-time = "2024-11-24T20:12:22.481Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d0/30/dc54f88dd4a2b5dc8a0279bdd7270e735851848b762aeb1c1184ed1f6b14/tqdm-4.67.1-py3-none-any.whl", hash = "sha256:26445eca388f82e72884e0d580d5464cd801a3ea01e63e5601bdff9ba6a48de2", size = 78540, upload-time = "2024-11-24T20:12:19.698Z" },
+]
+
+[[package]]
+name = "types-openpyxl"
+version = "3.1.5.20250919"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/c4/12/8bc4a25d49f1e4b7bbca868daa3ee80b1983d8137b4986867b5b65ab2ecd/types_openpyxl-3.1.5.20250919.tar.gz", hash = "sha256:232b5906773eebace1509b8994cdadda043f692cfdba9bfbb86ca921d54d32d7", size = 100880, upload-time = "2025-09-19T02:54:39.997Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/36/3c/d49cf3f4489a10e9ddefde18fd258f120754c5825d06d145d9a0aaac770b/types_openpyxl-3.1.5.20250919-py3-none-any.whl", hash = "sha256:bd06f18b12fd5e1c9f0b666ee6151d8140216afa7496f7ebb9fe9d33a1a3ce99", size = 166078, upload-time = "2025-09-19T02:54:38.657Z" },
 ]
 
 [[package]]

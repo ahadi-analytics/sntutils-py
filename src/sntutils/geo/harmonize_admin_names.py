@@ -38,19 +38,19 @@ try:
         "muted": "dim white",
         "highlight": "bold white",
     })
-    console = Console(theme=theme)
+    console: Optional[Console] = Console(theme=theme)
     RICH_AVAILABLE = True
 except ImportError:
     RICH_AVAILABLE = False
     console = None
 
 try:
-    from stringdist import levenshtein, jaro_winkler
+    from stringdist import levenshtein, jaro_winkler  # type: ignore[import-not-found]
 except ImportError:
     import Levenshtein
-    def levenshtein(s1, s2):
+    def levenshtein(s1: str, s2: str) -> int:
         return Levenshtein.distance(s1, s2)
-    def jaro_winkler(s1, s2):
+    def jaro_winkler(s1: str, s2: str) -> float:
         return 1 - Levenshtein.jaro_winkler(s1, s2)
 
 
@@ -185,7 +185,7 @@ def export_dataframe(
         elif format in ['xlsx', 'xls']:
             # Check if openpyxl is available
             try:
-                import openpyxl
+                import openpyxl  # type: ignore[import-untyped]
                 df.to_excel(file_path, index=False, engine='openpyxl')
                 print(f"✓ Data exported to Excel: {file_path}")
             except ImportError:
@@ -211,7 +211,7 @@ def export_dataframe(
             # RDS is R's native format, so we'll create a pickle file with metadata
             # that can be easily read in R using reticulate or converted
             try:
-                import pyreadr
+                import pyreadr  # type: ignore[import-not-found]
                 pyreadr.write_rds(file_path, df)
                 print(f"✓ Data exported to RDS: {file_path}")
             except ImportError:
@@ -339,21 +339,21 @@ def calculate_match_stats(
             if lv in lookup_data.columns:
                 lookup_data[lv] = lookup_data[lv].astype(str).str.lower()
 
-    def compose_fields(*args):
+    def compose_fields(*args: Optional[str]) -> List[str]:
         return [f for f in args if f is not None]
 
-    def build_keys(df, fields):
+    def build_keys(df: pd.DataFrame, fields: List[str]) -> List[str]:
         if not fields:
             return []
         combos = get_hierarchical_combinations(df, fields)
         if len(combos) == 0:
             return []
         if len(fields) == 1:
-            return combos[fields[0]].unique().tolist()
-        return (combos[fields].apply(lambda x: '_'.join(x.astype(str)), axis=1)
-                .unique().tolist())
+            return list(combos[fields[0]].unique())
+        return list(combos[fields].apply(lambda x: '_'.join(x.astype(str)), axis=1)
+                .unique())
 
-    def paint_matches(matches, total):
+    def paint_matches(matches: int, total: int) -> str:
         num_str = f"{matches:,}"
         if matches < total:
             return f"\033[91m{num_str}\033[0m"  # Red color for mismatches
@@ -361,7 +361,7 @@ def calculate_match_stats(
 
     results = {}
 
-    def process_level(level_key, level_num, fields, label):
+    def process_level(level_key: str, level_num: int, fields: List[str], label: Optional[str]) -> None:
         data_keys = build_keys(data, fields)
         lookup_keys = build_keys(lookup_data, fields)
         matches = len(set(data_keys) & set(lookup_keys))
@@ -401,7 +401,7 @@ def calculate_match_stats(
         _display_match_stats_plain(rows, target_complete, lookup_complete, levels_vec, data, lookup_data)
 
 
-def _display_match_stats_rich(rows, target_complete, lookup_complete, levels_vec, data, lookup_data):
+def _display_match_stats_rich(rows: List[Dict[str, Any]], target_complete: bool, lookup_complete: bool, levels_vec: List[str], data: pd.DataFrame, lookup_data: pd.DataFrame) -> None:
     """Display match statistics using Rich library for beautiful output."""
     # Create main panel title
     title = Text("ℹ Match Summary", style="bold")
@@ -488,20 +488,21 @@ def _display_match_stats_rich(rows, target_complete, lookup_complete, levels_vec
             )
 
     # Display everything - left aligned
-    console.print()
+    if console:
+        console.print()
 
-    # Print title without panel
-    console.print(title)
-    console.print()
+        # Print title without panel
+        console.print(title)
+        console.print()
 
-    # Print table directly without outer panel
-    console.print(table)
+        # Print table directly without outer panel
+        console.print(table)
 
-    if missing_panel:
-        console.print(missing_panel)
-    console.print()
+        if missing_panel:
+            console.print(missing_panel)
+        console.print()
 
-def _display_match_stats_plain(rows, target_complete, lookup_complete, levels_vec, data, lookup_data):
+def _display_match_stats_plain(rows: List[Dict[str, Any]], target_complete: bool, lookup_complete: bool, levels_vec: List[str], data: pd.DataFrame, lookup_data: pd.DataFrame) -> None:
     """Display match statistics in plain text format (fallback)."""
     # Display results
     print("\n" + "="*93)
@@ -630,6 +631,9 @@ def _display_menu_rich(title: str, main_header: str, choices_input: List[str],
     from rich.columns import Columns
     from rich.text import Text
     from rich.rule import Rule
+
+    if not console:
+        return _display_menu_plain(title, main_header, choices_input, special_actions, prompt)
 
     # Clear console and create header
     console.clear()
@@ -819,7 +823,7 @@ def handle_user_interaction(
     level: str,
     clear_console: bool = True,
     max_options: int = 200
-) -> pd.DataFrame:
+) -> Optional[pd.DataFrame]:
     """
     Interact with users for data cleaning choices.
 
@@ -843,7 +847,7 @@ def handle_user_interaction(
     input_data = input_data[~input_data['matched_names'].isna() & ~input_data['name_to_match'].isna()]
 
     unique_names = input_data['name_to_match'].unique()
-    user_choices = []
+    user_choices: List[Dict[str, Any]] = []
 
     i = 0
     while i < len(unique_names):
@@ -852,9 +856,9 @@ def handle_user_interaction(
 
         # Get current name to clean
         name_to_clean = unique_names[i]
-        replacement_names = (input_data[input_data['name_to_match'] == name_to_clean]
+        replacement_names_array = (input_data[input_data['name_to_match'] == name_to_clean]
                            ['matched_names'].unique()[:max_options])
-        replacement_names = [str(n).title() for n in replacement_names]
+        replacement_names = [str(n).title() for n in replacement_names_array]
 
         # Get geographic context
         geo_info = input_data[input_data['name_to_match'] == name_to_clean].iloc[0]
@@ -866,7 +870,7 @@ def handle_user_interaction(
 
         # Create title
         main_header = f"{level.title()} {i + 1} of {len(unique_names)}"
-        title = f"Which {level} name would you like to replace '{name_to_clean.upper()}'?"
+        title = f"Which {level} name would you like to replace '{str(name_to_clean).upper()}'?"
 
         if level_idx > 0 and long_geo:
             geo_parts = long_geo.split('_')
@@ -931,7 +935,7 @@ def handle_user_interaction(
         else:
             try:
                 idx = int(user_choice) - 1
-                replace_name = replacement_names[idx].upper()
+                replace_name = str(replacement_names[idx]).upper()
                 user_choices.append({
                     'level': level_label,
                     'name_to_match': name_to_clean,
@@ -972,8 +976,8 @@ def construct_geo_names(
     This function creates a composite geographic identifier by concatenating
     values from specified administrative level columns within a dataframe.
     """
-    def build_long_geo(row):
-        parts = []
+    def build_long_geo(row: pd.Series) -> str:
+        parts: List[str] = []
         for level in [level0, level1, level2, level3, level4]:
             if level and level in row.index and pd.notna(row[level]):
                 parts.append(str(row[level]))
@@ -1086,7 +1090,7 @@ def prep_geonames(
     interactive: bool = True,
     max_options: int = 200,
     preserve_case: bool = False
-) -> pd.DataFrame:
+) -> Optional[pd.DataFrame]:
     """
     Interactive Admin Name Cleaning and Matching.
 
